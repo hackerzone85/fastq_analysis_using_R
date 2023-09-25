@@ -1,0 +1,33 @@
+library("ShortRead")
+source("/home/hadoop/R/softTrimFunction.R")
+dh1_reads1 <-readFastq("/home/hadoop/miARma/Examples/basic_examples/mRNAs/reads/Sample1_1.fastq")
+dh1_reads2 <-readFastq("/home/hadoop/miARma/Examples/basic_examples/mRNAs/reads/Sample1_2.fastq")
+dh1_trimmedReads1 <-softTrim(reads=dh1_reads1,minQuality=20,firstBase=1,minLength=200)
+dh1_trimmedReads2 <-softTrim(reads=dh1_reads2,minQuality=20,firstBase=1,minLength=200)
+
+writeFastq(dh1_trimmedReads1,file="/home/hadoop/Desktop/Sample123_SilvaSSU/triming_temp/dh1_trimmedReads1.fq.gz")
+
+writeFastq(dh1_trimmedReads2,file="/home/hadoop/Desktop/Sample123_SilvaSSU/triming_temp/dh1_trimmedReads2.fq.gz")
+
+library(ShortRead)
+library(BiocParallel)
+library(BiocIntro)
+library(ggplot2)
+setwd("/home/hadoop/Desktop/Sample123_SilvaSSU/raw_data")
+dirPath <- getwd()
+fls <- dir(dirPath, pattern="fastq.gz", full=TRUE)
+qa <- qa(dirPath, "DH_Sample1_R1.fastq.gz", type="fastq")
+browseURL(report(qa))
+destinations <- sub("fastq.gz", "trimmed.fastq",fls)
+trimTails(fls, 3, "5",FALSE, destinations=destinations)
+
+sampler <- FastqSampler(file.path(dirPath, "DH_Sample1_R1.fastq.gz"), 1000000)
+reads <- yield(sampler)
+head( id(reads) )
+head(sread(reads) )
+head(quality(reads))
+abc <- alphabetByCycle(sread(reads))
+abc[1:11, 1:8]
+matplot(t(abc[c("A","G","T","C"),]), type="l")
+alf0 <- alphabetFrequency(sread(reads), as.prob=TRUE)
+hist(alf0[,c("G", "C")] ,main =  "Histogram of gc Content",xlab="individual reads" )
